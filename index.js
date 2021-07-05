@@ -25,7 +25,7 @@ const routes = require('./routes')(app);
     };
 
     let server = https.createServer(options, app);
-    server.listen(PORT, () => {
+    server.listen(SERVER_PORT, () => {
         console.log("App starting on port: " + PORT)
     });
     // app.listen(SERVER_PORT, () => console.log(`Service started on port ${SERVER_PORT}`));
