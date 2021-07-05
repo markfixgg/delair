@@ -4,6 +4,14 @@ const JobSchema = new Schema({
     jobId: String,
     payType: String,
     serviceCode: String,
+    lat: {
+        type: String,
+        default: null
+    },
+    lng: {
+        type: String,
+        default: null
+    },
     state: {
         type: String,
         default: 'START'
@@ -16,6 +24,7 @@ const JobSchema = new Schema({
         type: String,
         default: 'OFF'
     },
+    userId: String,
     time: String
 })
 

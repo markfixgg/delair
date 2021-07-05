@@ -26,7 +26,7 @@ class AuthCtrl {
             const user = await User.findOne({login, password});
             if(!user) return res.send({success: false, error: "Login or password incorrect!"})
 
-            const token = jwt.sign({login}, JWT_ACCESS_SECRET, {expiresIn: '1h'})
+            const token = jwt.sign({login, _id: user._id}, JWT_ACCESS_SECRET, {expiresIn: '24h'})
             await User.findOneAndUpdate({login}, {loggedIn: true})
 
             res.send({success: true, token})
