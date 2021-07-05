@@ -72,7 +72,7 @@ module.exports = (app) => {
     app.post('/shift', checkIfAuthenticated, controllers.JobsCtrl.shift) // shift state ON/OFF
     app.post('/receiveJob', checkIfAuthenticated, controllers.JobsCtrl.receiveJob) // create new job
     app.post('/job', checkIfAuthenticated, controllers.JobsCtrl.change_state) // change state of job
-    app.post('/getJob', checkIfAuthenticated, controllers.JobsCtrl.get_all) // return all job list
+    app.post('/getJobs', checkIfAuthenticated, controllers.JobsCtrl.get_all) // return all job list
     app.post('/getJob/:jobId', checkIfAuthenticated, controllers.JobsCtrl.get_by_id) // return exact job
 
     // Upload routes
