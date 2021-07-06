@@ -7,7 +7,7 @@ class JobsCtrl {
             const {_id} = req.user;
             if(!jobId) return res.send({success: false, error: 'Missing jobId!'})
             if(!payType || !['HR', 'JR'].includes(payType)) return res.send({success: false, error: 'Incorrect payType! Pay type must be HR/JR'})
-            if(!serviceCode) return res.send({success: false, error: 'Missing serviceCode!'})
+            // if(!serviceCode) return res.send({success: false, error: 'Missing serviceCode!'})
             if(!time) return res.send({success: false, error: 'Missing time!'})
 
             await Job.create({jobId, payType, serviceCode, time, userId: _id})
