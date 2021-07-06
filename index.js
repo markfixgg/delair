@@ -6,11 +6,10 @@ const fs = require('fs');
 const {SERVER_PORT} = require('./config');
 const dbInit = require('./modules/database');
 
-const app = express();
-app.use(cors())
+const app = express()
+app.use(cors());
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json());
-
 
 const routes = require('./routes')(app);
 
