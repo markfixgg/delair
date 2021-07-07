@@ -1,5 +1,5 @@
 const Job = require('../../models/Job')
-
+const Upload = require('../../models/Upload')
 class JobsCtrl {
     async receiveJob (req, res) {
         try {
@@ -9,6 +9,9 @@ class JobsCtrl {
             if(!payType || !['HR', 'JR'].includes(payType)) return res.send({success: false, error: 'Incorrect payType! Pay type must be HR/JR'})
             // if(!serviceCode) return res.send({success: false, error: 'Missing serviceCode!'})
             if(!time) return res.send({success: false, error: 'Missing time!'})
+
+            const check = await Job.findOne({jobId});
+            if(check) return res.send({success: false, error: `Job with jobId: ${jobId} already exists!`})
 
             await Job.create({jobId, payType, serviceCode, time, userId: _id})
 
@@ -91,11 +94,15 @@ class JobsCtrl {
 
     async get_by_id (req, res) {
         try {
-            const {jobId} = req.params;
-            if(!jobId) return res.send({success: false, error: 'Missing id!'})
+            const {jobId, payType, serviceCode, time} = req.body;
+            const {_id} = req.user;
+
+            if(!jobId) return res.send({success: false, error: 'Missing jobId!'})
+            if(!payType || !['HR', 'JR'].includes(payType)) return res.send({success: false, error: 'Incorrect payType! Pay type must be HR/JR'})
+            // if(!serviceCode) return res.send({success: false, error: 'Missing serviceCode!'})
+            if(!time) return res.send({success: false, error: 'Missing time!'})
 
             const job = await Job.findOne({jobId})
-
             if(!job) return res.send({success: false, error: `Job with id: ${jobId} not found!`})
 
             res.send({success: true, job})
@@ -113,7 +120,7 @@ class JobsCtrl {
         }
     }
     // /sendPunches
-    async punches (req, res) {
+    async sendQueueElements (req, res) {
         const {query} = req.body;
         const {_id} = req.user;
         let json;
@@ -126,94 +133,108 @@ class JobsCtrl {
 
         let results = await Promise.all(
             json.map(async item => {
-            const {type, jobId, serviceCode, lat, lng, time} = item;
-            if(!jobId) return {success: false, error: 'Missing jobId!'}
-            if(!time) return {success: false, error: 'Missing time!'}
-            if(!type || !['SS', 'SE', 'LS', 'LE', 'JS', 'JE', 'GEO'].includes(type)) return {success: false, error: 'Incorrect type, must be SS, SE, LS, LE, JS, JE, GEO!'}
+                const {type, jobId, serviceCode, lat, lng, time, image, guid} = item;
+                if(!jobId) return {success: false, error: 'Missing jobId!'}
+                if(!time) return {success: false, error: 'Missing time!'}
+                if(!type || !['SS', 'SE', 'LS', 'LE', 'JS', 'JE', 'GEO', 'PIC'].includes(type)) return {success: false, error: 'Incorrect type, must be SS, SE, LS, LE, JS, JE, GEO!'}
 
-            if(lat && lng && jobId) {
-                await Job.findOneAndUpdate({jobId}, {lat, lng, time})
-            }
-            else if (lat && lng) {
-                await Job.updateMany({userId: _id}, {lat, lng, time})
-            }
+                if(lat && lng && jobId) {
+                    await Job.findOneAndUpdate({jobId}, {lat, lng, time})
+                }
+                else if (lat && lng) {
+                    await Job.updateMany({userId: _id}, {lat, lng, time})
+                }
 
-            switch (type) {
-                case 'SS':
-                    if(jobId) {
-                        await Job.findOneAndUpdate({jobId}, {shift: 'ON', time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {shift: 'ON', time})
+                switch (type) {
+                    case 'PIC':
+                        if (!image) return {success: false, error: 'Missing image byte array'}
+                        if (!guid) return {success: false, error: 'Missing guid'}
+
+                        const check = await Upload.findOne({guid})
+                        if(check) return {success: false, error: `Image with guid: ${guid} already exist`}
+
+                        // TODO: не уверен что работает
+                        const buffer = new Buffer.from(image)
+                        await Upload.create({guid, image: buffer})
+
                         return {success: true}
-                    }
+                        break;
 
-                    break;
-                case 'SE':
-                    if(jobId) {
-                        await Job.findOneAndUpdate({jobId}, {shift: 'OFF', time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {shift: 'OFF', time})
-                        return {success: true}
-                    }
-                    break;
-                case 'LS':
-                    if(jobId) {
-                        await Job.findOneAndUpdate({jobId}, {lunch: 'ON', time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {lunch: 'ON', time})
-                        return {success: true}
-                    }
+                    case 'SS':
+                        if(jobId) {
+                            await Job.findOneAndUpdate({jobId}, {shift: 'ON', time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {shift: 'ON', time})
+                            return {success: true}
+                        }
 
-                    break;
-                case 'LE':
-                    if(jobId) {
-                        await Job.findOneAndUpdate({jobId}, {lunch: 'OFF', time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {lunch: 'OFF', time})
-                        return {success: true}
-                    }
-                    break;
-                case 'JS':
-                    if(jobId) {
-                        await Job.findOneAndUpdate({jobId}, {state: 'START', time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {lunch: 'START', time})
-                        return {success: true}
-                    }
+                        break;
+                    case 'SE':
+                        if(jobId) {
+                            await Job.findOneAndUpdate({jobId}, {shift: 'OFF', time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {shift: 'OFF', time})
+                            return {success: true}
+                        }
+                        break;
+                    case 'LS':
+                        if(jobId) {
+                            await Job.findOneAndUpdate({jobId}, {lunch: 'ON', time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {lunch: 'ON', time})
+                            return {success: true}
+                        }
 
-                    break;
-                case 'JE':
-                    if(jobId) {
-                        await Job.findOneAndUpdate({jobId}, {state: 'FINISH', time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {lunch: 'FINISH', time})
-                        return {success: true}
-                    }
+                        break;
+                    case 'LE':
+                        if(jobId) {
+                            await Job.findOneAndUpdate({jobId}, {lunch: 'OFF', time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {lunch: 'OFF', time})
+                            return {success: true}
+                        }
+                        break;
+                    case 'JS':
+                        if(jobId) {
+                            await Job.findOneAndUpdate({jobId}, {state: 'START', time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {lunch: 'START', time})
+                            return {success: true}
+                        }
 
-                    break;
-                case 'GEO':
-                    if(!lat || !lng) return res.send({success: false, error: 'Missing lat, lng'})
-                    if(jobId){
-                        await Job.findOneAndUpdate({jobId}, {lat, lng, time})
-                        return {jobId, type, success: true}
-                    } else {
-                        await Job.updateMany({userId: _id}, {lat, lng, time})
-                        return {success: true}
-                    }
+                        break;
+                    case 'JE':
+                        if(jobId) {
+                            await Job.findOneAndUpdate({jobId}, {state: 'FINISH', time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {lunch: 'FINISH', time})
+                            return {success: true}
+                        }
 
-                    break;
-                default:
-                    return {success: false, error: 'Type not found'}
-                    break;
-            }
+                        break;
+                    case 'GEO':
+                        if(!lat || !lng) return res.send({success: false, error: 'Missing lat, lng'})
+                        if(jobId){
+                            await Job.findOneAndUpdate({jobId}, {lat, lng, time})
+                            return {jobId, type, success: true}
+                        } else {
+                            await Job.updateMany({userId: _id}, {lat, lng, time})
+                            return {success: true}
+                        }
 
-        })
+                        break;
+                    default:
+                        return {success: false, error: 'Type not found'}
+                        break;
+                }
+
+            })
         )
 
         res.send({success: true, results })
