@@ -4,7 +4,7 @@ class UploadsCtrl {
     async sendPhoto (req, res) {
         try {
             const {buffer} = req.file;
-            const {guid} = req.body;
+            const {guid, commentary} = req.body;
 
             if(!guid) return res.send({success: false, error: 'Missing guid!'})
             if(!buffer) return res.send({success: false, error: 'Missing file!'})
@@ -12,7 +12,7 @@ class UploadsCtrl {
             const check = await Upload.findOne({guid})
             if(check) return res.send('DUPLICATE')
 
-            await Upload.create({image: buffer, guid})
+            await Upload.create({image: buffer, guid, commentary})
 
             res.send('OK')
         } catch (e) {
@@ -52,8 +52,8 @@ class UploadsCtrl {
 
             if(!image) return res.send({success: false, error: `Image with guid: ${guid} not found!`})
 
-            res.set('Content-Type', 'image/png')
-            res.send(image.image)
+            // res.set('Content-Type', 'image/png')
+            res.send({image: image.image, guid: image.guid, commentary: image.commentary})
         } catch (e) {
             res.status(500).send({success: false, error: e.message})
         }

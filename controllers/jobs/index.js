@@ -133,8 +133,8 @@ class JobsCtrl {
 
         let results = await Promise.all(
             json.map(async item => {
-                const {type, jobId, serviceCode, lat, lng, time, image, guid} = item;
-                if(!jobId) return {success: false, error: 'Missing jobId!'}
+                const {type, jobId, serviceCode, lat, lng, time, image, guid, commentary} = item;
+                // if(!jobId) return {success: false, error: 'Missing jobId!'}
                 if(!time) return {success: false, error: 'Missing time!'}
                 if(!type || !['SS', 'SE', 'LS', 'LE', 'JS', 'JE', 'GEO', 'PIC'].includes(type)) return {success: false, error: 'Incorrect type, must be SS, SE, LS, LE, JS, JE, GEO!'}
 
@@ -155,7 +155,7 @@ class JobsCtrl {
 
                         // TODO: не уверен что работает
                         const buffer = new Buffer.from(image)
-                        await Upload.create({guid, image: buffer})
+                        await Upload.create({guid, image: buffer, commentary})
 
                         return {success: true}
                         break;
