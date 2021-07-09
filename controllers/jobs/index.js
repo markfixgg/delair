@@ -3,17 +3,17 @@ const Upload = require('../../models/Upload')
 class JobsCtrl {
     async receiveJob (req, res) {
         try {
-            const {jobId, payType, serviceCode, time} = req.body;
+            const {jobId, payType, serviceCode, address, time} = req.body;
             const {_id} = req.user;
             if(!jobId) return res.send({success: false, error: 'Missing jobId!'})
             if(!payType || !['HR', 'JR'].includes(payType)) return res.send({success: false, error: 'Incorrect payType! Pay type must be HR/JR'})
-            // if(!serviceCode) return res.send({success: false, error: 'Missing serviceCode!'})
+            if(!address) return res.send({success: false, error: 'Missing address!'})
             if(!time) return res.send({success: false, error: 'Missing time!'})
 
             const check = await Job.findOne({jobId});
             if(check) return res.send({success: false, error: `Job with jobId: ${jobId} already exists!`})
 
-            await Job.create({jobId, payType, serviceCode, time, userId: _id})
+            await Job.create({jobId, payType, serviceCode, time, userId: _id, address})
 
             res.send({success: true})
         } catch (e) {

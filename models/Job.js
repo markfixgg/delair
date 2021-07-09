@@ -4,6 +4,10 @@ const JobSchema = new Schema({
     jobId: String,
     payType: String,
     serviceCode: String,
+    address: {
+        type: String,
+        default: null
+    },
     lat: {
         type: String,
         default: null
