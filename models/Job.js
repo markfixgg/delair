@@ -8,14 +8,14 @@ const JobSchema = new Schema({
         type: String,
         default: null
     },
-    lat: {
-        type: String,
-        default: null
-    },
-    lng: {
-        type: String,
-        default: null
-    },
+    // lat: {
+    //     type: String,
+    //     default: null
+    // },
+    // lng: {
+    //     type: String,
+    //     default: null
+    // },
     state: {
         type: String,
         default: 'START'

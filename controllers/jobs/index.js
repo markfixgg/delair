@@ -133,16 +133,16 @@ class JobsCtrl {
 
         let results = await Promise.all(
             json.map(async item => {
-                const {type, jobId, serviceCode, lat, lng, time, image, guid, commentary} = item;
+                const {type, jobId, serviceCode, address, time, image, guid, commentary} = item;
                 // if(!jobId) return {success: false, error: 'Missing jobId!'}
                 if(!time) return {success: false, error: 'Missing time!'}
                 if(!type || !['SS', 'SE', 'LS', 'LE', 'JS', 'JE', 'GEO', 'PIC'].includes(type)) return {success: false, error: 'Incorrect type, must be SS, SE, LS, LE, JS, JE, GEO!'}
 
-                if(lat && lng && jobId) {
-                    await Job.findOneAndUpdate({jobId}, {lat, lng, time})
+                if(address && jobId) {
+                    await Job.findOneAndUpdate({jobId}, {address, time})
                 }
-                else if (lat && lng) {
-                    await Job.updateMany({userId: _id}, {lat, lng, time})
+                else if (address) {
+                    await Job.updateMany({userId: _id}, {address, time})
                 }
 
                 switch (type) {
@@ -219,12 +219,12 @@ class JobsCtrl {
 
                         break;
                     case 'GEO':
-                        if(!lat || !lng) return res.send({success: false, error: 'Missing lat, lng'})
+                        if(!address) return res.send({success: false, error: 'Missing address'})
                         if(jobId){
-                            await Job.findOneAndUpdate({jobId}, {lat, lng, time})
+                            await Job.findOneAndUpdate({jobId}, {address, time})
                             return {jobId, type, success: true}
                         } else {
-                            await Job.updateMany({userId: _id}, {lat, lng, time})
+                            await Job.updateMany({userId: _id}, {address, time})
                             return {success: true}
                         }
 
